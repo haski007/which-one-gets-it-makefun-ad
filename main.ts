@@ -17,13 +17,17 @@ const VIDEO_URL = /^https:\/\/(?:www\.|m\.)?tiktok\.com\/@[A-Za-z0-9._]+\/video\
 
 let url = '';
 try {
-  url = String(JSON.parse(readFileSync(join(BOT_DIR, 'VIDEO.json'), 'utf8')).url ?? '');
+  url = String(JSON.parse(readFileSync(join(BOT_DIR, 'VIDEO.json'), 'utf8')).url ?? '').trim();
 } catch (err) {
   console.error(`VIDEO.json could not be read from ${BOT_DIR}: ${(err as Error).message}`);
   process.exit(1);
 }
 if (!VIDEO_URL.test(url)) {
-  console.error(`VIDEO.json url is not a TikTok video address: ${url}`);
+  // A vm./vt. short link or tiktok.com/t/ link names no video until opened: say so instead of the generic message.
+  const hint = /(?:^|\/\/)(?:vm|vt)\.tiktok\.com|tiktok\.com\/t\//.test(url)
+    ? ' (a short link: open it in a browser and copy the https://www.tiktok.com/@<handle>/video/<id> address it lands on)'
+    : '';
+  console.error(`VIDEO.json url is not a TikTok video address: ${url}${hint}`);
   process.exit(1);
 }
 
